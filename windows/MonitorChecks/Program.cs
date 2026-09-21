@@ -40,7 +40,7 @@ var window = new QuotaWindow("w", "Weekly", 9, now.AddMinutes(10), now);
 Check(window.Fresh(now, 600) && !window.Fresh(now.AddMinutes(11), 10000) && !window.Fresh(now.AddMinutes(5), 60), "Freshness and reset expiration");
 Check(!(window with { Observed = now.AddSeconds(61) }).Fresh(now, 600), "Future observations rejected");
 Check(QuotaWindow.MinimumFreshRemaining(new[] { window, window with { Id = "lower", Remaining = 37 },
-    window with { Id = "stale", Remaining = 5, Observed = now.AddHours(-1) } }, now, 600) == 37,
+    window with { Id = "stale", Remaining = 5, Observed = now.AddHours(-1) } }, now, 600) == 9,
     "Minimum fresh quota for selected account");
 Check(QuotaWindow.MinimumFreshRemaining(new[] { window with { Remaining = null } }, now, 600) is null,
     "Unavailable selected account is not zero");
