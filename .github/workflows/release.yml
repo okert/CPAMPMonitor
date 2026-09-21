@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-14
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Run core checks
+        run: swift run MonitorChecks
+
+      - name: Build application
+        env:
+          APP_VERSION: ${{ github.ref_name }}
+        run: |
+          APP_VERSION="${APP_VERSION#v}" zsh scripts/build-app.sh release
+
+      - name: Package release assets
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          VERSION="${VERSION#v}"
+          ditto -c -k --sequesterRsrc --keepParent \
+            "release/CPAMP Monitor.app" \
+            "release/CPAMP-Monitor-${VERSION}-macOS-arm64.zip"
+          shasum -a 256 "release/CPAMP-Monitor-${VERSION}-macOS-arm64.zip" \
+            > "release/CPAMP-Monitor-${VERSION}-macOS-arm64.zip.sha256"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CPAMP-Monitor-${{ github.ref_name }}
+          path: release/*
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          VERSION="${VERSION#v}"
+          gh release create "$GITHUB_REF_NAME" \
+            "release/CPAMP-Monitor-${VERSION}-macOS-arm64.zip" \
+            "release/CPAMP-Monitor-${VERSION}-macOS-arm64.zip.sha256" \
+            --verify-tag \
+            --title "CPAMP Monitor ${VERSION}" \
+            --generate-notes

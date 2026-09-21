@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: macos-14
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Run core checks
+        run: swift run MonitorChecks
+
+      - name: Verify release compilation
+        run: swift build -c release --product CPAMPMonitor
