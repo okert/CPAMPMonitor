@@ -37,9 +37,9 @@ import MonitorCore
         image?.isTemplate = true
         item.button?.image = image
         item.button?.contentTintColor = nil
-        item.button?.title = model.lowest.map { " \(Int($0))%" } ?? ""
+        item.button?.title = model.displayLowest.map { " \(Int($0))%" } ?? ""
         item.button?.font = .monospacedDigitSystemFont(ofSize: 12, weight: .medium)
-        item.button?.toolTip = "CPAMP Monitor · " + model.statusText
+        item.button?.toolTip = "CPAMP Monitor · \(model.displayLabel) · \(model.statusText)"
     }
 
     @objc func togglePopover() {

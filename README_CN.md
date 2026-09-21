@@ -10,11 +10,11 @@ Windows 预览包单独发布在 [Releases](https://github.com/okert/CPAMPMonito
 
 ## 功能
 
-- 在菜单栏显示最低剩余额度，点击后查看账号详情。
+- 菜单栏默认显示所有监控账号中的最低新鲜额度，也可以改为显示指定账号的最低新鲜额度；点击后查看账号详情。
 - 支持 Codex、Antigravity、xAI，并保留 Claude OAuth 额度解析支持。
 - 查看 5 小时、周额度、计费周期等窗口及重置时间。
 - 查看 CPAMP 提供的请求数、Token、成功率和计算成本历史。
-- 支持账号筛选、显示顺序、刷新间隔和告警阈值配置。
+- 支持菜单栏显示账号、账号筛选与排序、刷新间隔和告警阈值配置。
 - 使用 macOS 通知，并对重复告警进行持久化去重。
 - 使用 macOS Keychain 保存管理密钥，不把密钥写入配置文件或命令行参数。
 - 支持 HTTPS 直连，也支持通过本机已有 SSH 配置建立可选隧道。
@@ -94,7 +94,7 @@ git push origin v0.1.0
 
 ## 测试
 
-`MonitorChecks` 是不依赖 XCTest 的轻量测试运行器，适用于只安装了 Command Line Tools 的 macOS。它覆盖 URL 安全校验、额度解析、空值处理、过期数据、告警去重、周期切换和账号身份等核心逻辑。
+`MonitorChecks` 是不依赖 XCTest 的轻量测试运行器，适用于只安装了 Command Line Tools 的 macOS。它覆盖 URL 安全校验、额度解析、空值处理、过期数据、菜单栏账号选择、告警去重、周期切换和账号身份等核心逻辑。
 
 ```sh
 swift run MonitorChecks

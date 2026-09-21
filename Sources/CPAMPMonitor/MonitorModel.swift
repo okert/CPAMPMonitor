@@ -41,7 +41,18 @@ struct AccountState: Identifiable {
         guard !paused, error == nil else { return [] }
         return accounts.filter { $0.enabled && $0.error == nil }.flatMap(\.windows).filter { $0.fresh(now: now, maxAge: maxAge) }
     }
-    var lowest: Double? { freshWindows.compactMap(\.remaining).min() }
+    var lowest: Double? { QuotaWindow.minimumFreshRemaining(freshWindows, now: now, maxAge: maxAge) }
+    var displayLowest: Double? {
+        guard !paused, error == nil else { return nil }
+        let rows = accounts.filter { row in
+            row.enabled && row.error == nil && (config.displayAccountID == nil || row.id == config.displayAccountID)
+        }
+        return QuotaWindow.minimumFreshRemaining(rows.flatMap(\.windows), now: now, maxAge: maxAge)
+    }
+    var displayLabel: String {
+        guard let id = config.displayAccountID else { return "所有账号最低" }
+        return accounts.first(where: { $0.id == id })?.account.title ?? "指定账号"
+    }
     var hasProblems: Bool {
         error != nil || accounts.contains { $0.enabled && ($0.error != nil || $0.windows.isEmpty || $0.windows.contains { !$0.fresh(now: now, maxAge: maxAge) }) }
     }

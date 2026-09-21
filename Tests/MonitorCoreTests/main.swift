@@ -45,7 +45,7 @@ let cases: [(String, () throws -> Void)] = [
     ("Stale data cannot alert", suite.testStaleExpiredAndUnknownQuotaCannotAlert),
     ("Reset jitter and new cycles", suite.testResetJitterAndNewCycle),
     ("Credential identity", suite.testAccountsKeepDistinctCredentialIdentity),
-    ("Account order migration", suite.testAccountOrderMigratesAndRoundTrips)
+    ("Account order and tray display migration", suite.testAccountOrderMigratesAndRoundTrips)
 ]
 for (name, run) in cases { try run(); print("PASS \(name)") }
 print("\(cases.count) checks passed")

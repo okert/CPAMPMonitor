@@ -60,7 +60,8 @@ public partial class App : Application
     private void UpdateTray()
     {
         if (tray is null) return;
-        var text = $"CPAMP Monitor | {Model.Status}" + (Model.Lowest is double n ? $" | {n:0}%" : "");
+        var text = $"CPAMP Monitor | {Model.Status} | {Model.DisplayLabel}" +
+            (Model.DisplayLowest is double n ? $" {n:0}%" : " unavailable");
         tray.Text = text.Length > 63 ? text[..63] : text;
         if (pauseItem is not null) pauseItem.Text = Model.Paused ? "Resume" : "Pause";
     }

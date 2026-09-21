@@ -16,7 +16,7 @@
     </StackPanel>
    </DockPanel>
    <DockPanel Margin="0,16,0,6">
-    <TextBlock x:Name="Lowest" DockPanel.Dock="Right" FontSize="30" FontWeight="SemiBold" />
+    <TextBlock x:Name="Lowest" DockPanel.Dock="Right" FontSize="30" FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Right" MaxWidth="320" />
     <TextBlock x:Name="Status" VerticalAlignment="Center" FontWeight="SemiBold" />
    </DockPanel>
    <TextBlock x:Name="ErrorText" TextWrapping="Wrap" Foreground="#B42318" />

@@ -10,10 +10,10 @@ Windows preview downloads are published separately under `windows-v*` in [Releas
 
 ## Features
 
-- Shows the lowest fresh remaining percentage in the menu bar and account details in a popover.
+- Shows either the lowest fresh percentage across all monitored accounts or the lowest fresh percentage for a selected account in the menu bar.
 - Supports Codex, Antigravity and xAI, with Claude OAuth quota parsing support.
 - Displays quota windows, reset times and CPAMP usage history.
-- Configures account selection and order, refresh interval and warning thresholds.
+- Configures the menu-bar display account, account selection and order, refresh interval and warning thresholds.
 - Sends macOS notifications with persistent per-account and per-cycle deduplication.
 - Stores the management key in macOS Keychain instead of source files or command-line arguments.
 - Supports direct HTTPS and an optional tunnel built from the user's existing SSH configuration.
@@ -93,7 +93,7 @@ The workflow uses a GitHub-hosted macOS runner to build both architectures and g
 
 ## Tests
 
-`MonitorChecks` is a lightweight test runner that does not depend on XCTest, so it also works with Command Line Tools only. It covers URL security validation, quota parsing, null handling, stale data, alert deduplication, reset cycles and credential identity.
+`MonitorChecks` is a lightweight test runner that does not depend on XCTest, so it also works with Command Line Tools only. It covers URL security validation, quota parsing, null handling, stale data, selectable display-account minimums, alert deduplication, reset cycles and credential identity.
 
 ```sh
 swift run MonitorChecks

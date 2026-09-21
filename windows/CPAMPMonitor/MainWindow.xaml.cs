@@ -24,7 +24,7 @@ public partial class MainWindow : Window
     {
         ConnectionName.Text = model.Config.Name;
         Status.Text = model.Status;
-        Lowest.Text = model.Lowest is double n ? $"{n:0}%" : "--";
+        Lowest.Text = model.DisplayLowest is double n ? $"{model.DisplayLabel}: {n:0}%" : $"{model.DisplayLabel}: unavailable";
         ErrorText.Text = string.Join("\n", new[] { model.Error, model.HistoryError, model.StorageError }.Where(s => !string.IsNullOrEmpty(s)));
         EmptyText.Text = model.Config.BaseUrl.Length == 0 ? "No connection configured." :
             model.Accounts.Count == 0 && !model.Refreshing && model.Error is null ? "No accounts returned by the service." : "";

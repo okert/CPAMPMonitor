@@ -39,6 +39,14 @@ Reject(() => Parse("unknown", "{}"), "Unsupported provider");
 var window = new QuotaWindow("w", "Weekly", 9, now.AddMinutes(10), now);
 Check(window.Fresh(now, 600) && !window.Fresh(now.AddMinutes(11), 10000) && !window.Fresh(now.AddMinutes(5), 60), "Freshness and reset expiration");
 Check(!(window with { Observed = now.AddSeconds(61) }).Fresh(now, 600), "Future observations rejected");
+Check(QuotaWindow.MinimumFreshRemaining(new[] { window, window with { Id = "lower", Remaining = 37 },
+    window with { Id = "stale", Remaining = 5, Observed = now.AddHours(-1) } }, now, 600) == 37,
+    "Minimum fresh quota for selected account");
+Check(QuotaWindow.MinimumFreshRemaining(new[] { window with { Remaining = null } }, now, 600) is null,
+    "Unavailable selected account is not zero");
+var displayConfig = new Configuration { DisplayAccountId = "codex:demo:1" };
+var displayRoundTrip = System.Text.Json.JsonSerializer.Deserialize<Configuration>(System.Text.Json.JsonSerializer.Serialize(displayConfig))!;
+Check(displayRoundTrip.DisplayAccountId == displayConfig.DisplayAccountId, "Tray display setting round trip");
 var ledger = new AlertLedger();
 Check(ledger.Evaluate("a", window, 20, 10, now, 600) == 10, "Critical alert priority");
 Check(ledger.Evaluate("a", window with { Remaining = 15 }, 20, 10, now, 600) is null, "Critical suppresses weaker alert");

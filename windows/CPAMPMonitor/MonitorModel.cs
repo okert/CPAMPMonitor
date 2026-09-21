@@ -37,9 +37,16 @@ internal sealed class MonitorModel : IDisposable
     private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(15) };
     private CancellationTokenSource? request;
     private int generation;
-    public double? Lowest => Paused || Error is not null ? null : Accounts.Where(a => a.Enabled && a.Error is null)
-        .SelectMany(a => a.Windows).Where(w => w.Fresh(DateTimeOffset.UtcNow, Config.MaxAge))
-        .Select(w => w.Remaining).DefaultIfEmpty(null).Min();
+    public double? Lowest => LowestFor(null);
+    public double? DisplayLowest => LowestFor(Config.DisplayAccountId);
+    public string DisplayLabel => Config.DisplayAccountId is null ? "All accounts minimum" :
+        Accounts.FirstOrDefault(a => a.Account.Id == Config.DisplayAccountId)?.Account.Title ?? "Selected account";
+    private double? LowestFor(string? accountId)
+    {
+        if (Paused || Error is not null) return null;
+        var rows = Accounts.Where(a => a.Enabled && a.Error is null && (accountId is null || a.Account.Id == accountId));
+        return QuotaWindow.MinimumFreshRemaining(rows.SelectMany(a => a.Windows), DateTimeOffset.UtcNow, Config.MaxAge);
+    }
     public string Status => Paused ? "Paused" : Refreshing ? "Refreshing" : Config.BaseUrl.Length == 0 ? "Not connected" :
         Error is not null ? "Connection failed" : !Accounts.Any(a => a.Enabled) ? "No monitored accounts" :
         Accounts.Any(a => a.Enabled && (a.Error is not null || a.Windows.Count == 0 ||

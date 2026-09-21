@@ -125,7 +125,12 @@ final class MonitorCoreTests {
         expectEqual(migrated.accountOrder, [])
         var current = migrated
         current.accountOrder = ["codex:one:1", "xai:two:2"]
+        current.displayAccountID = "xai:two:2"
         let roundTrip = try! JSONDecoder().decode(Configuration.self, from: JSONEncoder().encode(current))
         expectEqual(roundTrip.accountOrder, current.accountOrder)
+        expectEqual(roundTrip.displayAccountID, current.displayAccountID)
+        let selected = [window(82), window(37), window(5, observed: now.addingTimeInterval(-601))]
+        expectEqual(QuotaWindow.minimumFreshRemaining(selected, now: now, maxAge: 600), 37)
+        expectNil(QuotaWindow.minimumFreshRemaining([window(5, observed: now.addingTimeInterval(-601))], now: now, maxAge: 600))
     }
 }

@@ -47,8 +47,8 @@ struct MonitorView: View {
                 Label(model.statusText, systemImage: model.paused ? "pause.circle" : model.hasProblems ? "exclamationmark.circle" : "circle.fill")
                     .foregroundStyle(color).font(.subheadline)
                 Spacer()
-                if let low = model.lowest {
-                    Text("最低剩余").font(.caption).foregroundStyle(.secondary)
+                if let low = model.displayLowest {
+                    Text(model.displayLabel).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     Text("\(Int(low))%").font(.system(size: 24, weight: .semibold, design: .rounded)).monospacedDigit()
                 }
             }.padding(.horizontal, 18).padding(.bottom, 14)
@@ -238,6 +238,17 @@ struct SettingsView: View {
                     }
                     Toggle("开机启动", isOn: $login)
                     Toggle("额度通知", isOn: $draft.notifications)
+                    Picker("菜单栏显示", selection: Binding(get: { draft.displayAccountID ?? "" }, set: {
+                        draft.displayAccountID = $0.isEmpty ? nil : $0
+                    })) {
+                        Text("所有账号最低").tag("")
+                        if let selected = draft.displayAccountID, !orderedRows.contains(where: { $0.id == selected }) {
+                            Text("指定账号（当前不可用）").tag(selected)
+                        }
+                        ForEach(orderedRows) { row in
+                            Text(row.account.title).tag(row.id)
+                        }
+                    }
                     Stepper("提醒：剩余 ≤ \(draft.warning)%", value: $draft.warning, in: 2...99)
                     Stepper("紧急：剩余 ≤ \(draft.critical)%", value: $draft.critical, in: 1...98)
                     HStack {
