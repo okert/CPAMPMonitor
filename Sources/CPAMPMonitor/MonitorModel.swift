@@ -59,7 +59,7 @@ struct AccountState: Identifiable {
 
     func start() {
         timer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 guard let self else { return }
                 self.now = Date()
                 self.onChange?()
@@ -67,7 +67,7 @@ struct AccountState: Identifiable {
             }
         }
         wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 guard let self else { return }
                 self.now = Date()
                 if !self.paused, self.lastRefresh == nil || Date().timeIntervalSince(self.lastRefresh!) > 30 { self.refresh() }
