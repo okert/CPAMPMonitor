@@ -31,13 +31,13 @@ CPAMP Monitor 是 CPAMP 兼容管理服务的 macOS 客户端，适配的源项�
 ## 系统要求
 
 - macOS 13 或更高版本。
-- GitHub Releases 中的预编译包目前面向 Apple Silicon Mac。
+- GitHub Releases 同时提供 Apple Silicon（`arm64`）和 Intel（`x86_64`）Mac 安装包。
 - 使用源码编译需要 Xcode 15+ 或包含 Swift 5.9+ 的 Command Line Tools。
 - 需要一个可访问的 CPAMP 兼容管理服务和对应的管理密钥。
 
 ## 安装
 
-1. 打开 [GitHub Releases](https://github.com/okert/CPAMPMonitor/releases)，下载最新的 `CPAMP-Monitor-*-macOS-arm64.zip`。
+1. 打开 [GitHub Releases](https://github.com/okert/CPAMPMonitor/releases)，根据 Mac 芯片选择安装包：Apple Silicon 选择 `macOS-arm64`，Intel 选择 `macOS-x86_64`。
 2. 解压后将 `CPAMP Monitor.app` 移到“应用程序”目录。
 3. 首次打开时，如果 macOS 阻止未 notarize 的应用，请在“系统设置 -> 隐私与安全性”中允许打开。
 4. 在设置窗口填写 CPAMP 管理服务的 HTTPS 地址和管理密钥。
@@ -51,12 +51,19 @@ swift run MonitorChecks
 zsh scripts/build-app.sh
 ```
 
-默认输出到 `dist/CPAMP Monitor.app`。`dist/`、`release/` 和 `.build/` 都已加入 Git 忽略规则，不会被提交到仓库。
+默认按照当前 Mac 的芯片架构输出到 `dist/CPAMP Monitor.app`。`dist/`、`release/` 和 `.build/` 都已加入 Git 忽略规则，不会被提交到仓库。
 
 手动指定输出目录：
 
 ```sh
 zsh scripts/build-app.sh ./release
+```
+
+也可以通过环境变量指定编译架构：
+
+```sh
+APP_ARCH=arm64 zsh scripts/build-app.sh ./release-arm64
+APP_ARCH=x86_64 zsh scripts/build-app.sh ./release-x86_64
 ```
 
 ## 配置与安全
@@ -72,14 +79,14 @@ zsh scripts/build-app.sh ./release
 
 ## GitHub Actions 发布
 
-仓库中的 `.github/workflows/release.yml` 会在推送 `v*` 标签后运行检查、构建应用，并在临时的 `release/` 目录中生成 ZIP 包和 SHA-256 文件。构建产物不会提交到 Git 仓库，而会作为 GitHub Release 附件和 Actions artifact 保存。
+仓库中的 `.github/workflows/release.yml` 会在推送 `v*` 标签后运行检查，同时构建 Apple Silicon 和 Intel 版本，并在临时的 `release/` 目录中生成两种 ZIP 包及对应的 SHA-256 文件。构建产物不会提交到 Git 仓库，而会作为 GitHub Release 附件和 Actions artifact 保存。
 
 ```sh
 git tag v0.1.0
 git push origin v0.1.0
 ```
 
-工作流使用 GitHub 托管的 macOS runner 构建 Apple Silicon 版本，并自动生成 Release notes。版本号来自 Git 标签；例如 `v0.2.0` 会生成 `0.2.0` 应用版本。
+工作流使用 GitHub 托管的 macOS runner 构建两种芯片架构的版本，并自动生成 Release notes。版本号来自 Git 标签；例如 `v0.2.0` 会生成 `0.2.0` 应用版本。
 
 ## 测试
 

@@ -20,3 +20,6 @@ jobs:
 
       - name: Verify release compilation
         run: swift build -c release --product CPAMPMonitor
+
+      - name: Verify Intel release compilation
+        run: swift build -c release --arch x86_64 --product CPAMPMonitor

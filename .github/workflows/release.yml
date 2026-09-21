@@ -22,7 +22,13 @@ jobs:
         env:
           APP_VERSION: ${{ github.ref_name }}
         run: |
-          APP_VERSION="${APP_VERSION#v}" zsh scripts/build-app.sh release
+          VERSION="${APP_VERSION#v}"
+          APP_VERSION="$VERSION" APP_ARCH=arm64 \
+            zsh scripts/build-app.sh "release/arm64"
+          APP_VERSION="$VERSION" APP_ARCH=x86_64 \
+            zsh scripts/build-app.sh "release/x86_64"
+          lipo -info "release/arm64/CPAMP Monitor.app/Contents/MacOS/CPAMPMonitor"
+          lipo -info "release/x86_64/CPAMP Monitor.app/Contents/MacOS/CPAMPMonitor"
 
       - name: Package release assets
         env:
@@ -30,16 +36,23 @@ jobs:
         run: |
           VERSION="${VERSION#v}"
           ditto -c -k --sequesterRsrc --keepParent \
-            "release/CPAMP Monitor.app" \
+            "release/arm64/CPAMP Monitor.app" \
             "release/CPAMP-Monitor-${VERSION}-macOS-arm64.zip"
           shasum -a 256 "release/CPAMP-Monitor-${VERSION}-macOS-arm64.zip" \
             > "release/CPAMP-Monitor-${VERSION}-macOS-arm64.zip.sha256"
+          ditto -c -k --sequesterRsrc --keepParent \
+            "release/x86_64/CPAMP Monitor.app" \
+            "release/CPAMP-Monitor-${VERSION}-macOS-x86_64.zip"
+          shasum -a 256 "release/CPAMP-Monitor-${VERSION}-macOS-x86_64.zip" \
+            > "release/CPAMP-Monitor-${VERSION}-macOS-x86_64.zip.sha256"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: CPAMP-Monitor-${{ github.ref_name }}
-          path: release/*
+          path: |
+            release/*.zip
+            release/*.sha256
           if-no-files-found: error
 
       - name: Create GitHub Release
@@ -51,6 +64,8 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             "release/CPAMP-Monitor-${VERSION}-macOS-arm64.zip" \
             "release/CPAMP-Monitor-${VERSION}-macOS-arm64.zip.sha256" \
+            "release/CPAMP-Monitor-${VERSION}-macOS-x86_64.zip" \
+            "release/CPAMP-Monitor-${VERSION}-macOS-x86_64.zip.sha256" \
             --verify-tag \
             --title "CPAMP Monitor ${VERSION}" \
             --generate-notes

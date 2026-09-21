@@ -30,13 +30,13 @@ CPAMP Monitor is a client for CPAMP-compatible management services. The referenc
 ## Requirements
 
 - macOS 13 or later.
-- The prebuilt GitHub Release is currently for Apple Silicon Macs.
+- GitHub Releases provide packages for Apple Silicon (`arm64`) and Intel (`x86_64`) Macs.
 - Source builds require Xcode 15+ or Command Line Tools that provide Swift 5.9+.
 - A reachable CPAMP-compatible management service and management key.
 
 ## Installation
 
-1. Open [GitHub Releases](https://github.com/okert/CPAMPMonitor/releases) and download the latest `CPAMP-Monitor-*-macOS-arm64.zip`.
+1. Open [GitHub Releases](https://github.com/okert/CPAMPMonitor/releases) and download the package for your Mac: `macOS-arm64` for Apple Silicon or `macOS-x86_64` for Intel.
 2. Extract it and move `CPAMP Monitor.app` to Applications.
 3. If macOS blocks the non-notarized app on first launch, allow it in System Settings under Privacy & Security.
 4. Enter the CPAMP management service HTTPS address and management key in Settings.
@@ -50,12 +50,19 @@ swift run MonitorChecks
 zsh scripts/build-app.sh
 ```
 
-The default output is `dist/CPAMP Monitor.app`. `dist/`, `release/` and `.build/` are ignored by Git and are not part of the source repository.
+The default output is `dist/CPAMP Monitor.app` for the current machine architecture. `dist/`, `release/` and `.build/` are ignored by Git and are not part of the source repository.
 
 To choose another output directory:
 
 ```sh
 zsh scripts/build-app.sh ./release
+```
+
+To build a specific architecture from a compatible macOS toolchain:
+
+```sh
+APP_ARCH=arm64 zsh scripts/build-app.sh ./release-arm64
+APP_ARCH=x86_64 zsh scripts/build-app.sh ./release-x86_64
 ```
 
 ## Configuration and Security
@@ -71,14 +78,14 @@ Do not commit real service addresses, management keys, account files, Keychain e
 
 ## GitHub Actions Releases
 
-`.github/workflows/release.yml` runs checks and builds the app after a `v*` tag is pushed. It creates a temporary `release/` directory containing the ZIP package and SHA-256 file. Build outputs are not committed; they are uploaded as GitHub Release assets and an Actions artifact.
+`.github/workflows/release.yml` runs checks and builds Apple Silicon and Intel apps after a `v*` tag is pushed. It creates a temporary `release/` directory containing both ZIP packages and their SHA-256 files. Build outputs are not committed; they are uploaded as GitHub Release assets and an Actions artifact.
 
 ```sh
 git tag v0.1.0
 git push origin v0.1.0
 ```
 
-The workflow uses a GitHub-hosted macOS runner to build the Apple Silicon package and generates Release notes automatically. The app version comes from the tag, so `v0.2.0` produces version `0.2.0`.
+The workflow uses a GitHub-hosted macOS runner to build both architectures and generates Release notes automatically. The app version comes from the tag, so `v0.2.0` produces version `0.2.0`.
 
 ## Tests
 

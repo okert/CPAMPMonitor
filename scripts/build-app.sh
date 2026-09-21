@@ -1,14 +1,24 @@
 #!/bin/zsh
 set -euo pipefail
 cd "${0:A:h}/.."
-swift build -c release --product CPAMPMonitor
+BUILD_ARCH="${APP_ARCH:-$(uname -m)}"
+case "$BUILD_ARCH" in
+    arm64|x86_64)
+        ;;
+    *)
+        print -u2 "Unsupported APP_ARCH: $BUILD_ARCH (expected arm64 or x86_64)"
+        exit 2
+        ;;
+esac
+
+swift build -c release --arch "$BUILD_ARCH" --product CPAMPMonitor
 OUTPUT_DIR="${1:-$PWD/dist}"
 mkdir -p "$OUTPUT_DIR"
 APP="$OUTPUT_DIR/CPAMP Monitor.app"
 ICONSET="$OUTPUT_DIR/AppIcon.iconset"
 rm -rf "$APP" "$ICONSET"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp .build/release/CPAMPMonitor "$APP/Contents/MacOS/CPAMPMonitor"
+cp ".build/${BUILD_ARCH}-apple-macosx/release/CPAMPMonitor" "$APP/Contents/MacOS/CPAMPMonitor"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 if [[ -n "${APP_VERSION:-}" ]]; then
     /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $APP_VERSION" "$APP/Contents/Info.plist"
