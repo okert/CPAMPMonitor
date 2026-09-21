@@ -72,8 +72,9 @@ public sealed class ApiClient : IDisposable
                 body["url"] = "https://cli-chat-proxy.grok.com/v1/billing?format=credits";
                 headers["x-xai-token-auth"] = "xai-grok-cli";
                 headers["x-grok-client-version"] = "0.2.101";
-                headers["User-Agent"] = "grok-pager/0.2.101 grok-shell/0.2.101 (windows; " +
-                    System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant() + ")";
+                var architecture = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture ==
+                    System.Runtime.InteropServices.Architecture.Arm64 ? "aarch64" : "x86_64";
+                headers["User-Agent"] = $"grok-pager/0.2.101 grok-shell/0.2.101 (windows; {architecture})";
                 break;
             case "claude":
                 body["url"] = "https://api.anthropic.com/api/oauth/usage";

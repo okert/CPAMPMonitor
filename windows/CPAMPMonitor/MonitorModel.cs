@@ -110,6 +110,8 @@ internal sealed class MonitorModel : IDisposable
                                 window, Config.Warning, Config.Critical, DateTimeOffset.UtcNow, Config.MaxAge);
                             if (threshold.HasValue) Notify?.Invoke(threshold == Config.Critical ? "Quota critical" : "Quota warning",
                                 $"{row.Account.Title}: {window.Title} {window.Remaining:0}% remaining", threshold == Config.Critical);
+                            // Preserve deduplication even if a later request is cancelled or the app exits.
+                            if (threshold.HasValue) SaveLedger();
                         }
                 }
                 catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
@@ -129,8 +131,7 @@ internal sealed class MonitorModel : IDisposable
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
             catch { HistoryError = "Usage history is unavailable."; foreach (var row in Accounts) row.History = null; }
-            try { Storage.Save("alerts", ledger); StorageError = null; }
-            catch { StorageError = "Alert history could not be saved. Notifications may repeat after restart."; }
+            SaveLedger();
             LastRefresh = DateTimeOffset.Now;
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { }
@@ -145,6 +146,11 @@ internal sealed class MonitorModel : IDisposable
                 Changed?.Invoke();
             }
         }
+    }
+    private void SaveLedger()
+    {
+        try { Storage.Save("alerts", ledger); StorageError = null; }
+        catch { StorageError = "Alert history could not be saved. Notifications may repeat after restart."; }
     }
     public void Save(Configuration config, string secret, bool startup)
     {

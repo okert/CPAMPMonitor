@@ -1,5 +1,7 @@
 # CPAMP Monitor for Windows (Preview)
 
+[English](README.md) | [简体中文](README_CN.md)
+
 Native C# / WPF desktop client. No WebView, Electron or SSH. Supports x64 and ARM64 Windows PCs. This is a preview pending real-machine acceptance testing.
 
 ## Run
@@ -38,12 +40,4 @@ Core checks can also run on macOS/Linux. WPF, Windows Credential Manager and not
 - Verify sign-in startup, sleep/resume, 100/150/200% display scaling and multiple monitors.
 - Confirm no management key appears in settings JSON, process arguments, screenshots or error messages.
 
-## 中文
-
-这是原生 C# / WPF Windows 客户端，不使用网页套壳，不包含 SSH。Intel/AMD 电脑选择 `win-x64`，Windows ARM 电脑选择 `win-arm64`。完整解压后运行 `CPAMPMonitor.exe`，无需另外安装 .NET 运行时。
-
-设置中填写 CPAMP 管理服务 HTTPS 地址和管理密钥；同一地址下密钥留空会保留已保存的密钥。密钥使用 Windows 凭据管理器保存，不写入配置 JSON。关闭面板后程序仍在系统托盘运行；退出需使用托盘菜单或退出按钮。通知显示受 Windows 通知设置和免打扰模式影响。
-
-建议使用 Windows 11。当前为未经签名的预览版，自动编译和基础检查不能替代实机验证。请先在测试环境验证连接、托盘、通知、开机启动、睡眠唤醒和缩放，再用于日常监控。移动或删除程序目录前请先关闭开机启动。
-
-适配服务：[CPA-Manager-Plus](https://github.com/seakee/CPA-Manager-Plus)。
+Compatible service: [CPA-Manager-Plus](https://github.com/seakee/CPA-Manager-Plus).

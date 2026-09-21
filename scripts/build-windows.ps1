@@ -18,6 +18,7 @@ $expected = if ($Runtime -eq 'win-x64') { 0x8664 } else { 0xAA64 }
 if ($machine -ne $expected) { throw 'Unexpected executable architecture' }
 Copy-Item LICENSE (Join-Path $output 'LICENSE.txt')
 Copy-Item windows/README.md (Join-Path $output 'README.md')
+Copy-Item windows/README_CN.md (Join-Path $output 'README_CN.md')
 $archive = Join-Path $OutputDirectory "CPAMP-Monitor-$Version-$Runtime.zip"
 Compress-Archive -Path "$output/*" -DestinationPath $archive -Force
 $hash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
