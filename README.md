@@ -4,6 +4,10 @@
 
 CPAMP Monitor is a native macOS menu-bar application for viewing provider quota and usage information exposed by a CPAMP-compatible management service.
 
+A native **Windows client (preview)** is also available, built with C# / WPF, without WebView or Electron. It supports x64 and ARM64, direct HTTPS connections, tray monitoring, notifications, Credential Manager storage and sign-in startup. SSH is not included in the Windows version. See [Windows setup and validation status](windows/README.md).
+
+Windows preview downloads are published separately under `windows-v*` in [Releases](https://github.com/okert/CPAMPMonitor/releases). The stable macOS release remains unchanged. Real-machine Windows acceptance testing is pending; automated builds and smoke checks are not a substitute for it.
+
 ## Features
 
 - Shows the lowest fresh remaining percentage in the menu bar and account details in a popover.
@@ -61,8 +65,8 @@ zsh scripts/build-app.sh ./release
 To build a specific architecture from a compatible macOS toolchain:
 
 ```sh
-APP_ARCH=arm64 zsh scripts/build-app.sh ./release-arm64
-APP_ARCH=x86_64 zsh scripts/build-app.sh ./release-x86_64
+APP_ARCH=arm64 zsh scripts/build-app.sh ./release/arm64
+APP_ARCH=x86_64 zsh scripts/build-app.sh ./release/x86_64
 ```
 
 ## Configuration and Security

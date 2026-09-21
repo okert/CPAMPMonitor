@@ -1,0 +1,82 @@
+name: Windows
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['windows-v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runtime: win-x64
+            runner: windows-latest
+          - runtime: win-arm64
+            runner: windows-11-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Core regression checks
+        run: dotnet run --project windows/MonitorChecks -c Release
+      - name: Build self-contained native package
+        shell: pwsh
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          $version = '0.2.0-preview.1'
+          if ($env:REF_NAME.StartsWith('windows-v')) { $version = $env:REF_NAME.Substring(9) }
+          ./scripts/build-windows.ps1 -Runtime '${{ matrix.runtime }}' -Version $version
+      - name: WPF and Credential Manager smoke checks
+        shell: pwsh
+        run: |
+          $exe = Resolve-Path 'release/${{ matrix.runtime }}/CPAMPMonitor.exe'
+          $process = Start-Process $exe -ArgumentList '--smoke-test', 'smoke-results' -PassThru
+          if (-not $process.WaitForExit(90000)) { $process.Kill(); throw 'Smoke checks timed out' }
+          Get-Content smoke-results/result.txt
+          if ($process.ExitCode -ne 0) { throw 'Smoke checks failed' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-smoke-${{ matrix.runtime }}
+          path: smoke-results/
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-package-${{ matrix.runtime }}
+          path: |
+            release/*.zip
+            release/*.sha256
+          if-no-files-found: error
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/windows-v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: windows-package-*
+          merge-multiple: true
+          path: release
+      - name: Publish Windows preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" release/*.zip release/*.sha256 \
+            --verify-tag --prerelease --title "CPAMP Monitor Windows ${TAG#windows-v}" \
+            --notes "Native WPF Windows preview (x64 and ARM64), no WebView or SSH. Extract the entire ZIP and run CPAMPMonitor.exe; .NET runtime is included. Unsigned. Automated core checks, native compilation and WPF/Credential Manager smoke checks have passed. Interactive tray, notifications, sign-in startup and live CPAMP connectivity still require real-machine acceptance testing. 原生 Windows 预览版；实机功能验收尚未完成。"

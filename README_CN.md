@@ -4,6 +4,10 @@
 
 CPAMP Monitor 是一个原生 macOS 菜单栏应用，用于查看 CPAMP 兼容管理服务提供的账号额度和使用情况。
 
+项目现已增加 **原生 Windows 客户端（预览版）**，使用 C# / WPF，不使用 WebView 或 Electron 网页套壳。支持 x64 和 ARM64、HTTPS 直连、系统托盘监控、通知、Windows 凭据管理器和开机启动；Windows 版不包含 SSH。详见 [Windows 使用说明与验证状态](windows/README.md)。
+
+Windows 预览包单独发布在 [Releases](https://github.com/okert/CPAMPMonitor/releases) 的 `windows-v*` 版本中，不替代现有 macOS 稳定版。目前仍需 Windows 实机验收，自动编译和基础检查不代表实机功能已全部验证。下文系统要求及编译说明针对 macOS。
+
 ## 功能
 
 - 在菜单栏显示最低剩余额度，点击后查看账号详情。
@@ -62,8 +66,8 @@ zsh scripts/build-app.sh ./release
 也可以通过环境变量指定编译架构：
 
 ```sh
-APP_ARCH=arm64 zsh scripts/build-app.sh ./release-arm64
-APP_ARCH=x86_64 zsh scripts/build-app.sh ./release-x86_64
+APP_ARCH=arm64 zsh scripts/build-app.sh ./release/arm64
+APP_ARCH=x86_64 zsh scripts/build-app.sh ./release/x86_64
 ```
 
 ## 配置与安全
