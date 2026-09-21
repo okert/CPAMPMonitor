@@ -25,8 +25,12 @@ internal static class SmokeChecks
                 new("weekly", "Weekly", 67, DateTimeOffset.UtcNow.AddDays(5), DateTimeOffset.UtcNow)] });
             var main = new MainWindow(model);
             Capture(main, Path.Combine(folder, "dashboard.png"));
+            main.Width = main.MinWidth;
+            Capture(main, Path.Combine(folder, "dashboard-narrow.png"));
             var settings = new SettingsWindow(model);
             Capture(settings, Path.Combine(folder, "settings.png"));
+            settings.Width = settings.MinWidth;
+            Capture(settings, Path.Combine(folder, "settings-narrow.png"));
             settings.Close(); main.Hide();
             File.WriteAllText(Path.Combine(folder, "result.txt"),
                 "PASS Credential Manager write/read/delete\nPASS WPF dashboard and settings rendering\n" +

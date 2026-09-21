@@ -49,7 +49,7 @@
             <TextBlock DockPanel.Dock="Right" Text="{Binding ValueText}" FontWeight="SemiBold" Margin="12,0,0,0" />
             <TextBlock Text="{Binding Title}" TextWrapping="Wrap" />
            </DockPanel>
-           <ProgressBar Height="5" Minimum="0" Maximum="100" Value="{Binding Value}" Foreground="{Binding Color}" Margin="0,5" />
+           <ProgressBar Height="5" Minimum="0" Maximum="100" Value="{Binding Value, Mode=OneWay}" Foreground="{Binding Color}" Margin="0,5" />
            <TextBlock Text="{Binding ResetText}" FontSize="12" Opacity="0.7" TextWrapping="Wrap" />
           </StackPanel>
          </DataTemplate>
