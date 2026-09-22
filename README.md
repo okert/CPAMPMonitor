@@ -20,11 +20,12 @@ macOS and Windows downloads are published together in each stable `v*` [Release]
 
 ## Screenshots
 
-The screenshots show the menu-bar dashboard and the settings window. Account identifiers are masked and the service address in the settings screenshot is an example address.
+The screenshots show the macOS menu-bar dashboard, macOS settings and the native Windows client after a successful connection. Account identifiers are masked; the service address and email addresses shown in the screenshots are not real.
 
 <p align="center">
   <img src="docs/images/cpamp-monitor-dashboard.png" alt="CPAMP Monitor dashboard" width="420">
   <img src="docs/images/cpamp-monitor-settings.png" alt="CPAMP Monitor settings" width="420">
+  <img src="docs/images/cpamp-monitor-windows.png" alt="CPAMP Monitor Windows client" width="420">
 </p>
 
 ## Compatible Service

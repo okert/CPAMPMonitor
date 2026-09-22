@@ -21,11 +21,12 @@ macOS 和 Windows 安装包会随每个稳定的 `v*` [Release](https://github.c
 
 ## 截图
 
-以下截图展示菜单栏监控面板和设置窗口。截图中的账号标识已遮挡，设置截图中的服务地址为示例地址。
+以下截图展示 macOS 菜单栏监控面板、macOS 设置窗口，以及成功连接后的原生 Windows 客户端。截图中的账号和邮箱均已遮挡，服务地址和邮箱内容均不是真实信息。
 
 <p align="center">
   <img src="docs/images/cpamp-monitor-dashboard.png" alt="CPAMP Monitor 监控面板" width="420">
   <img src="docs/images/cpamp-monitor-settings.png" alt="CPAMP Monitor 设置窗口" width="420">
+  <img src="docs/images/cpamp-monitor-windows.png" alt="CPAMP Monitor Windows 客户端" width="420">
 </p>
 
 ## 适配的源项目
