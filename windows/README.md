@@ -1,8 +1,8 @@
-# CPAMP Monitor for Windows (Preview)
+# CPAMP Monitor for Windows
 
 [English](README.md) | [简体中文](README_CN.md)
 
-Native C# / WPF desktop client. No WebView, Electron or SSH. Supports x64 and ARM64 Windows PCs. This is a preview pending real-machine acceptance testing.
+Native C# / WPF desktop client. No WebView, Electron or SSH. Supports x64 and ARM64 Windows PCs.
 
 ## Run
 
@@ -27,7 +27,7 @@ dotnet run --project windows/MonitorChecks -c Release
 ./scripts/build-windows.ps1 -Runtime win-arm64
 ```
 
-Core checks can also run on macOS/Linux. WPF, Windows Credential Manager and notification-area behavior require Windows. GitHub Actions builds each architecture on its native runner, validates the executable architecture and runs a synthetic WPF/Credential Manager smoke test. The smoke test never connects to a real service. `windows-v*` tags publish a Windows prerelease without changing the stable macOS release.
+Core checks can also run on macOS/Linux. WPF, Windows Credential Manager and notification-area behavior require Windows. GitHub Actions builds each architecture on its native runner, validates the executable architecture and runs a synthetic WPF/Credential Manager smoke test. The smoke test never connects to a real service. Stable `v*` tags publish macOS and Windows packages together in one Release.
 
 ## Real-Machine Acceptance Checklist
 

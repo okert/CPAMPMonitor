@@ -4,9 +4,9 @@
 
 CPAMP Monitor is a native macOS menu-bar application for viewing provider quota and usage information exposed by a CPAMP-compatible management service.
 
-A native **Windows client (preview)** is also available, built with C# / WPF, without WebView or Electron. It supports x64 and ARM64, direct HTTPS connections, tray monitoring, notifications, Credential Manager storage and sign-in startup. SSH is not included in the Windows version. See [Windows setup and validation status](windows/README.md).
+A native **Windows client** is also available, built with C# / WPF, without WebView or Electron. It supports x64 and ARM64, direct HTTPS connections, tray monitoring, notifications, Credential Manager storage and sign-in startup. SSH is not included in the Windows version. See [Windows setup and validation status](windows/README.md).
 
-Windows preview downloads are published separately under `windows-v*` in [Releases](https://github.com/okert/CPAMPMonitor/releases). The stable macOS release remains unchanged. Real-machine Windows acceptance testing is pending; automated builds and smoke checks are not a substitute for it.
+macOS and Windows downloads are published together in each stable `v*` [Release](https://github.com/okert/CPAMPMonitor/releases). Windows packages are native WPF applications for x64 and ARM64; SSH is intentionally not included.
 
 ## Features
 
@@ -82,14 +82,14 @@ Do not commit real service addresses, management keys, account files, Keychain e
 
 ## GitHub Actions Releases
 
-`.github/workflows/release.yml` runs checks and builds Apple Silicon and Intel apps after a `v*` tag is pushed. It creates a temporary `release/` directory containing both ZIP packages and their SHA-256 files. Build outputs are not committed; they are uploaded as GitHub Release assets and an Actions artifact.
+Pushing a `v*` tag runs the macOS and Windows workflows. They build Apple Silicon, Intel, Windows x64 and Windows ARM64 packages in temporary `release/` directories. Build outputs are not committed; they are uploaded as assets to the same GitHub Release and as Actions artifacts.
 
 ```sh
-git tag v0.1.0
-git push origin v0.1.0
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
-The workflow uses a GitHub-hosted macOS runner to build both architectures and generates Release notes automatically. The app version comes from the tag, so `v0.2.0` produces version `0.2.0`.
+The app version comes from the tag, so `v1.0.0` produces version `1.0.0` in all packages. Release notes are generated automatically.
 
 ## Tests
 

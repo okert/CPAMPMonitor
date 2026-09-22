@@ -1,8 +1,8 @@
-# CPAMP Monitor Windows 版（预览）
+# CPAMP Monitor Windows 版
 
 [English](README.md) | [简体中文](README_CN.md)
 
-原生 C# / WPF Windows 客户端，不使用 WebView、Electron 或其他网页套壳，不包含 SSH。提供 x64 和 ARM64 版本，目前仍需实机验收。
+原生 C# / WPF Windows 客户端，不使用 WebView、Electron 或其他网页套壳，不包含 SSH。提供 x64 和 ARM64 版本。
 
 ## 使用
 
@@ -31,7 +31,7 @@ dotnet run --project windows/MonitorChecks -c Release
 
 核心检查也可以在 macOS/Linux 上运行。WPF、Windows 凭据管理器和托盘行为需要 Windows。GitHub Actions 分别在两种架构的原生 Windows runner 上编译，校验 EXE 架构，并使用虚构数据执行界面和凭据管理器基础检查，不连接真实服务。
 
-`windows-v*` 标签单独发布 Windows 预览版，不替代 macOS 稳定版。
+稳定的 `v*` 标签会将 macOS 和 Windows 的全部架构包发布到同一个 Release 中。
 
 ## 实机验收清单
 

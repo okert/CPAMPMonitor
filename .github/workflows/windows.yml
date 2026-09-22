@@ -36,7 +36,7 @@ jobs:
         env:
           REF_NAME: ${{ github.ref_name }}
         run: |
-          $version = '0.2.0'
+          $version = '1.0.0'
           if ($env:REF_NAME.StartsWith('windows-v')) {
             $version = $env:REF_NAME.Substring(9)
           } elseif ($env:REF_NAME.StartsWith('v')) {

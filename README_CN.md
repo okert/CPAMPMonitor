@@ -4,9 +4,9 @@
 
 CPAMP Monitor 是一个原生 macOS 菜单栏应用，用于查看 CPAMP 兼容管理服务提供的账号额度和使用情况。
 
-项目现已增加 **原生 Windows 客户端（预览版）**，使用 C# / WPF，不使用 WebView 或 Electron 网页套壳。支持 x64 和 ARM64、HTTPS 直连、系统托盘监控、通知、Windows 凭据管理器和开机启动；Windows 版不包含 SSH。详见 [Windows 使用说明与验证状态](windows/README_CN.md)。
+项目现已增加 **原生 Windows 客户端**，使用 C# / WPF，不使用 WebView 或 Electron 网页套壳。支持 x64 和 ARM64、HTTPS 直连、系统托盘监控、通知、Windows 凭据管理器和开机启动；Windows 版不包含 SSH。详见 [Windows 使用说明与验证状态](windows/README_CN.md)。
 
-Windows 预览包单独发布在 [Releases](https://github.com/okert/CPAMPMonitor/releases) 的 `windows-v*` 版本中，不替代现有 macOS 稳定版。目前仍需 Windows 实机验收，自动编译和基础检查不代表实机功能已全部验证。下文系统要求及编译说明针对 macOS。
+macOS 和 Windows 安装包会随每个稳定的 `v*` [Release](https://github.com/okert/CPAMPMonitor/releases) 一起发布。Windows 版本是原生 WPF 客户端，提供 x64 和 ARM64 包，不包含 SSH 功能。
 
 ## 功能
 
@@ -83,14 +83,14 @@ APP_ARCH=x86_64 zsh scripts/build-app.sh ./release/x86_64
 
 ## GitHub Actions 发布
 
-仓库中的 `.github/workflows/release.yml` 会在推送 `v*` 标签后运行检查，同时构建 Apple Silicon 和 Intel 版本，并在临时的 `release/` 目录中生成两种 ZIP 包及对应的 SHA-256 文件。构建产物不会提交到 Git 仓库，而会作为 GitHub Release 附件和 Actions artifact 保存。
+推送 `v*` 标签后，macOS 和 Windows 工作流会分别编译 Apple Silicon、Intel、Windows x64 和 Windows ARM64 版本，并在临时的 `release/` 目录中生成 ZIP 包及对应的 SHA-256 文件。构建产物不会提交到 Git 仓库，而会作为同一个 GitHub Release 的附件和 Actions artifact 保存。
 
 ```sh
-git tag v0.1.0
-git push origin v0.1.0
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
-工作流使用 GitHub 托管的 macOS runner 构建两种芯片架构的版本，并自动生成 Release notes。版本号来自 Git 标签；例如 `v0.2.0` 会生成 `0.2.0` 应用版本。
+版本号来自 Git 标签；例如 `v1.0.0` 会让所有安装包使用 `1.0.0` 版本号，并自动生成 Release notes。
 
 ## 测试
 
