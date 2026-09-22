@@ -34,6 +34,7 @@ func expectThrows<T>(_ expression: @autoclosure () throws -> T, file: StaticStri
 
 let suite = MonitorCoreTests()
 let cases: [(String, () throws -> Void)] = [
+    ("Reset credits, individual expiry and fail-closed outcomes", suite.testResetCreditsAndExpiry),
     ("URL normalization and HTTPS enforcement", suite.testURLNormalizationAndTransportSafety),
     ("Settings validation", suite.testConfigurationThresholdValidation),
     ("Codex windows, null handling", suite.testCodexWindowsPlanAndNullSafety),
@@ -49,3 +50,10 @@ let cases: [(String, () throws -> Void)] = [
 ]
 for (name, run) in cases { try run(); print("PASS \(name)") }
 print("\(cases.count) checks passed")
+let finished = DispatchSemaphore(value: 0)
+Task.detached {
+    do { try await checkResetAPI(); print("PASS Reset API request/response contracts (mock transport)") }
+    catch { preconditionFailure("Reset API checks failed: \(error)") }
+    finished.signal()
+}
+finished.wait()

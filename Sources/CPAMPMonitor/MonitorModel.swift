@@ -14,6 +14,8 @@ struct AccountState: Identifiable {
     var retryAfter: Date?
     var enabled = true
     var fetched: Date?
+    var resetCredits: ResetCredits?
+    var resetCreditsError: String?
 }
 
 struct DisplayWindowChoice: Identifiable, Hashable {
@@ -25,6 +27,7 @@ struct DisplayWindowChoice: Identifiable, Hashable {
     @Published var config = Storage.load(Configuration.self, key: "configuration") ?? Configuration()
     @Published var accounts: [AccountState] = []
     @Published var refreshing = false
+    @Published var resettingAccountID: String?
     @Published var error: String?
     @Published var historyError: String?
     @Published var lastRefresh: Date?
@@ -117,7 +120,7 @@ struct DisplayWindowChoice: Identifiable, Hashable {
     }
 
     func refresh() {
-        guard configured, !refreshing, !paused else { return }
+        guard configured, !refreshing, resettingAccountID == nil, !paused else { return }
         refreshing = true
         onChange?()
         task = Task { await performRefresh() }
@@ -168,6 +171,15 @@ struct DisplayWindowChoice: Identifiable, Hashable {
                         accounts[index].retryAfter = Date().addingTimeInterval(900)
                     }
                 }
+                if accounts[index].account.provider == "codex" {
+                    do {
+                        accounts[index].resetCredits = try await client.resetCredits(accounts[index].account)
+                        accounts[index].resetCreditsError = nil
+                    } catch {
+                        accounts[index].resetCredits = nil
+                        accounts[index].resetCreditsError = safeMessage(error)
+                    }
+                }
                 now = Date()
                 onChange?()
             }
@@ -178,6 +190,74 @@ struct DisplayWindowChoice: Identifiable, Hashable {
             } catch { historyError = "历史用量暂不可用" }
             lastRefresh = Date()
         } catch { self.error = safeMessage(error) }
+    }
+
+    func confirmReset(_ id: String) async {
+        guard !refreshing, resettingAccountID == nil, !paused,
+              let index = accounts.firstIndex(where: { $0.id == id }), accounts[index].enabled else { return }
+        let account = accounts[index].account
+        guard account.provider == "codex", !account.disabled else { return }
+        resettingAccountID = id
+        defer { resettingAccountID = nil; onChange?() }
+        do {
+            try await tunnel.prepare(config)
+            let client = try APIClient(baseURL: config.baseURL, key: Storage.credential(config.credentialID))
+            let verified = try await client.resetCredits(account)
+            accounts[index].resetCredits = verified
+            accounts[index].resetCreditsError = nil
+            guard let count = verified.count, count > 0 else { throw MonitorError("当前没有可用重置次数。") }
+            let alert = NSAlert()
+            alert.messageText = "重置 Codex 额度？"
+            alert.informativeText = "账号：\(account.title)\n当前可用 \(count) 次。继续将消耗 1 次重置机会，此操作不可撤销。"
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "取消")
+            alert.addButton(withTitle: "确认重置")
+            alert.window.level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 1)
+            guard alert.runModal() == .alertSecondButtonReturn else { return }
+
+            // A timed-out mutation may still have succeeded. Never reuse pre-reset evidence or retry automatically.
+            accounts[index].resetCredits = nil
+            accounts[index].windows = []
+            accounts[index].retryAfter = nil
+            do { try await client.consumeResetCredit(account) }
+            catch {
+                accounts[index].resetCreditsError = "重置结果未确认，请刷新核实。"
+                throw MonitorError(safeMessage(error) + " 请刷新核实结果，勿重复提交。")
+            }
+            var issues: [String] = []
+            do { try await client.syncQuotaReset(account) }
+            catch { issues.append("网关同步失败") }
+            do {
+                let quota = try await client.quota(account)
+                accounts[index].windows = quota.windows
+                accounts[index].plan = quota.plan
+                accounts[index].error = nil
+                accounts[index].fetched = Date()
+            } catch {
+                accounts[index].error = safeMessage(error)
+                issues.append("额度刷新失败")
+            }
+            do {
+                accounts[index].resetCredits = try await client.resetCredits(account)
+                accounts[index].resetCreditsError = nil
+            } catch {
+                accounts[index].resetCreditsError = safeMessage(error)
+                issues.append("剩余次数刷新失败")
+            }
+            now = Date()
+            let result = NSAlert()
+            result.messageText = issues.isEmpty ? "额度已重置" : "额度已重置，后续同步未完成"
+            result.informativeText = issues.isEmpty ? "已更新额度和剩余重置次数。" : issues.joined(separator: "；") + "。请稍后刷新，不要再次消耗重置次数。"
+            result.window.level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 1)
+            result.runModal()
+        } catch {
+            let alert = NSAlert()
+            alert.messageText = "未完成重置"
+            alert.informativeText = safeMessage(error)
+            alert.alertStyle = .warning
+            alert.window.level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 1)
+            alert.runModal()
+        }
     }
 
     func safeMessage(_ error: Error) -> String {
@@ -237,7 +317,7 @@ struct DisplayWindowChoice: Identifiable, Hashable {
     }
 
     func save(_ newConfig: Configuration, secret: String, login: Bool) async throws {
-        guard !refreshing else { throw MonitorError("请等待当前刷新完成。") }
+        guard !refreshing, resettingAccountID == nil else { throw MonitorError("请等待当前刷新或重置完成。") }
         let validated = try newConfig.validated()
         if !secret.isEmpty { try Storage.storeCredential(secret, server: validated.credentialID) }
         guard try !Storage.credential(validated.credentialID).isEmpty else { throw MonitorError("该地址尚未保存管理密钥。") }
@@ -253,6 +333,7 @@ struct DisplayWindowChoice: Identifiable, Hashable {
     }
 
     func togglePause() {
+        guard resettingAccountID == nil else { return }
         paused.toggle()
         if !paused { refresh() }
         onChange?()

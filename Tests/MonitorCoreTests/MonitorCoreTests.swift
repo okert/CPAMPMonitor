@@ -4,6 +4,38 @@ import MonitorCore
 final class MonitorCoreTests {
     let now = Date(timeIntervalSince1970: 1_790_000_000)
 
+    func testResetCreditsAndExpiry() throws {
+        let expiry = now.addingTimeInterval(3600)
+        let result = try ResetCredits.parse(["available_count": 3, "credits": [
+            ["id": "later", "reset_type": "codex_rate_limits", "status": "available", "expires_at": now.addingTimeInterval(7200).ISO8601Format()],
+            ["id": "first", "resetType": "codex_rate_limits", "status": "available", "expiresAt": expiry.ISO8601Format()],
+            ["id": "unknown", "reset_type": "codex_rate_limits", "status": "available"],
+            ["id": "expired", "reset_type": "codex_rate_limits", "status": "available", "expires_at": now.ISO8601Format()],
+            ["id": "used", "reset_type": "codex_rate_limits", "status": "redeemed"],
+            ["id": "other", "reset_type": "other", "status": "available"]
+        ]], now: now)
+        expectEqual(result.count, 3)
+        expectEqual(result.credits.count, 3)
+        expectEqual(result.credits.first?.expires, expiry)
+        expectNil(result.credits.last?.expires)
+        expectTrue(result.detailsAvailable)
+        expectEqual(try ResetCredits.parse(["credits": []]).count, 0)
+        expectEqual(try ResetCredits.parse(["availableCount": "2"]).count, 2)
+        expectEqual(try ResetCredits.parse(["available_count": 2]).detailsAvailable, false)
+        for value: Any in [NSNull(), true, -1, 1.5, "bad", Double.infinity, Double(Int.max)] {
+            expectThrows(try ResetCredits.parse(["available_count": value]))
+        }
+        expectThrows(try ResetCredits.parse([:]))
+        expectThrows(try ResetCredits.parse(["credits": "bad"]))
+        for outcome in ["reset", "already_redeemed"] {
+            expectNoThrow(try ResetCredits.validateOutcome(["code": outcome]))
+        }
+        for outcome in ["no_credit", "nothing_to_reset", "ok", "", "unknown"] {
+            expectThrows(try ResetCredits.validateOutcome(["code": outcome]))
+        }
+        expectThrows(try ResetCredits.validateOutcome([:]))
+    }
+
     func testURLNormalizationAndTransportSafety() throws {
         expectEqual(try Configuration.normalizeURL(" https://host.test/management.html ").absoluteString, "https://host.test")
         expectEqual(try Configuration.normalizeURL("https://host.test/prefix/v1/").absoluteString, "https://host.test/prefix")

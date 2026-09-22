@@ -12,10 +12,10 @@ public final class APIClient {
     private let base: URL
     private let key: String
     private let session: URLSession
-    public init(baseURL: String, key: String) throws {
+    public init(baseURL: String, key: String, configuration: URLSessionConfiguration = .ephemeral) throws {
         base = try Configuration.normalizeURL(baseURL)
         self.key = key
-        let config = URLSessionConfiguration.ephemeral
+        let config = configuration
         config.timeoutIntervalForRequest = 35
         config.timeoutIntervalForResource = 50
         config.httpCookieStorage = nil
@@ -55,6 +55,48 @@ public final class APIClient {
         let data = try await request("v0/management/auth-files")
         guard let files = data["files"] as? [[String: Any]] else { throw MonitorError("账号列表结构不兼容。") }
         return files.map(Account.init).sorted { $0.provider == $1.provider ? $0.title < $1.title : $0.provider < $1.provider }
+    }
+
+    private func resetCreditCall(_ account: Account, consume: Bool) async throws -> [String: Any] {
+        guard account.provider == "codex", !account.authIndex.isEmpty, !account.disabled else {
+            throw MonitorError("该账号不支持重置额度。")
+        }
+        var headers = ["Authorization": "Bearer $TOKEN$", "Content-Type": "application/json",
+                       "User-Agent": "codex-tui/0.149.1"]
+        if !account.accountID.isEmpty { headers["Chatgpt-Account-Id"] = account.accountID }
+        if !consume {
+            headers["Accept"] = "application/json"
+            headers["OpenAI-Beta"] = "codex-1"
+            headers["Originator"] = "Codex Desktop"
+        }
+        var body: [String: Any] = ["authIndex": account.authIndex, "method": consume ? "POST" : "GET",
+            "url": "https://chatgpt.com/backend-api/wham/rate-limit-reset-credits" + (consume ? "/consume" : ""),
+            "header": headers]
+        if consume {
+            body["data"] = String(data: try JSONSerialization.data(withJSONObject: ["redeem_request_id": UUID().uuidString]), encoding: .utf8)!
+        }
+        let data = try await request("v0/management/api-call", body: body)
+        let status = Int(number(data["status_code"] ?? data["statusCode"]) ?? 0)
+        guard (200...299).contains(status) else {
+            throw MonitorError("重置额度接口请求失败（HTTP \(status)）。", status: status)
+        }
+        if let payload = data["body"] as? [String: Any] { return payload }
+        if let raw = (data["body"] as? String)?.data(using: .utf8),
+           let payload = try JSONSerialization.jsonObject(with: raw) as? [String: Any] { return payload }
+        throw MonitorError("重置额度响应无法识别。")
+    }
+
+    public func resetCredits(_ account: Account) async throws -> ResetCredits {
+        try ResetCredits.parse(await resetCreditCall(account, consume: false))
+    }
+
+    public func consumeResetCredit(_ account: Account) async throws {
+        try ResetCredits.validateOutcome(await resetCreditCall(account, consume: true))
+    }
+
+    public func syncQuotaReset(_ account: Account) async throws {
+        let result = try await request("v0/management/reset-quota", body: ["auth_index": account.authIndex])
+        guard string(result["status"]) == "ok" else { throw MonitorError("网关未确认额度同步成功。") }
     }
 
     public func history(_ accounts: [Account]) async throws -> [String: [String: Any]] {

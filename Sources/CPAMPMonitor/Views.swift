@@ -73,7 +73,10 @@ struct MonitorView: View {
                         ForEach(model.accounts) { row in
                             AccountView(row: row, now: model.now, maxAge: model.maxAge,
                                         warning: model.config.warning, critical: model.config.critical,
-                                        stale: model.error != nil || model.paused)
+                                        stale: model.error != nil || model.paused,
+                                        resetDisabled: model.refreshing || model.resettingAccountID != nil || model.paused,
+                                        resetting: model.resettingAccountID == row.id,
+                                        onReset: { Task { await model.confirmReset(row.id) } })
                             Divider().padding(.horizontal, 18)
                         }
                     }
@@ -111,6 +114,10 @@ struct AccountView: View {
     let warning: Int
     let critical: Int
     let stale: Bool
+    var resetDisabled = true
+    var resetting = false
+    var onReset: () -> Void = {}
+    @State private var showingCredits = false
     var icon: String { ["codex": "terminal", "antigravity": "sparkles", "xai": "bolt", "claude": "sun.max"][row.account.provider] ?? "cloud" }
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -146,6 +153,13 @@ struct AccountView: View {
                         HStack(alignment: .firstTextBaseline) {
                             Text(window.title).font(.system(size: 10)).lineLimit(1).truncationMode(.tail)
                             Spacer(minLength: 8)
+                            if row.account.provider == "codex", window.id == "main:primary_window" {
+                                Button(action: onReset) {
+                                    Label(resetting ? "…" : row.resetCredits?.count.map(String.init) ?? "--", systemImage: "arrow.counterclockwise")
+                                }.buttonStyle(.borderless).font(.system(size: 10))
+                                    .help("剩余可用重置次数；重置前需确认")
+                                    .disabled(resetDisabled || row.resetCredits == nil || row.resetCredits?.count == 0 || stale)
+                            }
                             Text(remaining.map { "\(fresh ? "剩余" : "旧值") \(Int($0))%" } ?? "未知")
                                 .font(.system(size: 10, weight: .medium)).monospacedDigit().foregroundStyle(fresh ? .primary : .secondary)
                         }
@@ -167,6 +181,20 @@ struct AccountView: View {
                     }
                 }
                 }
+                if row.account.provider == "codex" {
+                    HStack {
+                        Button { showingCredits.toggle() } label: {
+                            Label("重置有效期", systemImage: "info.circle")
+                        }.buttonStyle(.borderless).font(.system(size: 10))
+                            .popover(isPresented: $showingCredits) {
+                                ResetCreditsView(credits: row.resetCredits, error: row.resetCreditsError, now: now, maxAge: maxAge)
+                            }
+                        if resetting { ProgressView().controlSize(.mini) }
+                        if row.resetCreditsError != nil {
+                            Text("重置次数暂不可用").font(.system(size: 10)).foregroundStyle(.orange)
+                        }
+                    }
+                }
             }
             if !row.history.isEmpty {
                 HStack(spacing: 12) {
@@ -180,6 +208,45 @@ struct AccountView: View {
                 }.font(.system(size: 10)).foregroundStyle(.secondary).monospacedDigit()
             }
         }.padding(.horizontal, 14).padding(.vertical, 9).opacity(row.enabled ? 1 : 0.6)
+    }
+}
+
+private struct ResetCreditsView: View {
+    let credits: ResetCredits?
+    let error: String?
+    let now: Date
+    let maxAge: TimeInterval
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("可用重置机会").font(.headline)
+            if let credits {
+                Text("剩余 \(credits.count.map(String.init) ?? "未知") 次").font(.subheadline)
+                if now.timeIntervalSince(credits.observed) > maxAge {
+                    Text("数据已过期，待刷新").foregroundStyle(.orange)
+                }
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 10) {
+                        ForEach(Array(credits.credits.enumerated()), id: \.element.id) { index, credit in
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("第 \(index + 1) 次").fontWeight(.medium)
+                                if let expires = credit.expires {
+                                    Text("到期：\(expires.formatted(date: .numeric, time: .standard))")
+                                    if expires > now {
+                                        Text("剩余 ") + Text(expires, style: .relative)
+                                    } else { Text("已过期").foregroundColor(.orange) }
+                                } else { Text("有效期未知").foregroundColor(.secondary) }
+                            }
+                        }
+                        if credits.count == 0 { Text("暂无可用重置机会") }
+                        else if !credits.detailsAvailable || (credits.count ?? 0) > credits.credits.count {
+                            Text("部分有效期明细未返回").foregroundColor(.secondary)
+                        }
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                }.frame(maxHeight: 240)
+                Text("时区：\(TimeZone.current.identifier)").foregroundStyle(.secondary)
+            } else { Text(error ?? "等待重置次数数据").foregroundStyle(.secondary) }
+        }.font(.caption).padding(16).frame(width: 290)
     }
 }
 

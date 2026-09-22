@@ -61,6 +61,10 @@ jobs:
           VERSION: ${{ github.ref_name }}
         run: |
           VERSION="${VERSION#v}"
+          NOTES=()
+          if [[ -f "docs/release-notes/${VERSION}.md" ]]; then
+            NOTES=(--notes-file "docs/release-notes/${VERSION}.md")
+          fi
           gh release create "$GITHUB_REF_NAME" \
             "release/CPAMP-Monitor-${VERSION}-macOS-arm64.zip" \
             "release/CPAMP-Monitor-${VERSION}-macOS-arm64.zip.sha256" \
@@ -68,4 +72,4 @@ jobs:
             "release/CPAMP-Monitor-${VERSION}-macOS-x86_64.zip.sha256" \
             --verify-tag \
             --title "CPAMP Monitor ${VERSION}" \
-            --generate-notes
+            --generate-notes "${NOTES[@]}"

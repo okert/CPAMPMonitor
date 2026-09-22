@@ -1,5 +1,7 @@
 # CPAMP Monitor
 
+On macOS, Codex accounts show available reset credits and individual expiration dates. Resetting verifies the current balance and requires confirmation before consuming one credit, then synchronizes the gateway and refreshes quota. Failed requests are never automatically retried. Expiration details unavailable from the provider are shown as unknown.
+
 [English](README.md) | [简体中文](README_CN.md)
 
 CPAMP Monitor is a native macOS menu-bar application for viewing provider quota and usage information exposed by a CPAMP-compatible management service.
@@ -76,7 +78,7 @@ APP_ARCH=x86_64 zsh scripts/build-app.sh ./release/x86_64
 - The client rejects remote HTTP, embedded credentials, query parameters and redirects to reduce accidental credential disclosure.
 - The management key is stored in the current macOS user's Keychain under the `local.cpamp.monitor` service.
 - SSH mode uses existing SSH configuration and non-interactive key authentication. It does not accept new host keys or modify SSH configuration.
-- The CPAMP service remains responsible for authorization. This client only requests account history, quota and provider data; it is not a server-side read-only boundary.
+- The CPAMP service remains responsible for authorization. In addition to history and quota queries, the macOS client can consume a Codex reset credit and synchronize gateway quota after explicit confirmation; it is not a server-side read-only boundary.
 - Provider quota endpoints are internal and may change. Unknown or expired data is shown as unavailable rather than fabricated as zero.
 
 Do not commit real service addresses, management keys, account files, Keychain exports or personal deployment details to a public repository.
