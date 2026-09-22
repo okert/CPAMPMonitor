@@ -18,6 +18,8 @@ public struct Configuration: Codable, Equatable {
     public var accountOrder: [String] = []
     /// nil keeps the legacy behavior: show the lowest fresh quota across all monitored accounts.
     public var displayAccountID: String? = nil
+    /// nil keeps the legacy behavior: consider every quota window.
+    public var displayWindowID: String? = nil
     public var sshHost = ""
     public var sshPort = 18317
     public var localPort = 18318
@@ -25,7 +27,7 @@ public struct Configuration: Codable, Equatable {
     public init() {}
 
     private enum CodingKeys: String, CodingKey {
-        case baseURL, name, interval, warning, critical, notifications, excluded, accountOrder, displayAccountID
+        case baseURL, name, interval, warning, critical, notifications, excluded, accountOrder, displayAccountID, displayWindowID
         case sshHost, sshPort, localPort
     }
 
@@ -42,6 +44,7 @@ public struct Configuration: Codable, Equatable {
         excluded = try values.decodeIfPresent(Set<String>.self, forKey: .excluded) ?? []
         accountOrder = try values.decodeIfPresent([String].self, forKey: .accountOrder) ?? []
         displayAccountID = try values.decodeIfPresent(String.self, forKey: .displayAccountID)
+        displayWindowID = try values.decodeIfPresent(String.self, forKey: .displayWindowID)
         sshHost = try values.decodeIfPresent(String.self, forKey: .sshHost) ?? ""
         sshPort = try values.decodeIfPresent(Int.self, forKey: .sshPort) ?? 18317
         localPort = try values.decodeIfPresent(Int.self, forKey: .localPort) ?? 18318
@@ -81,6 +84,7 @@ public struct Configuration: Codable, Equatable {
             throw MonitorError("刷新间隔需为 1–60 分钟，阈值需满足 1 ≤ 紧急 < 提醒 ≤ 99。")
         }
         if result.displayAccountID?.isEmpty == true { result.displayAccountID = nil }
+        if result.displayWindowID?.isEmpty == true { result.displayWindowID = nil }
         return result
     }
 }
@@ -133,8 +137,10 @@ public struct QuotaWindow: Identifiable, Codable, Equatable {
     public func fresh(now: Date, maxAge: TimeInterval) -> Bool {
         now.timeIntervalSince(observed) >= -60 && now.timeIntervalSince(observed) <= maxAge && (reset == nil || reset! > now)
     }
-    public static func minimumFreshRemaining(_ windows: [QuotaWindow], now: Date, maxAge: TimeInterval) -> Double? {
-        windows.filter { $0.fresh(now: now, maxAge: maxAge) }.compactMap(\.remaining).min()
+    public static func minimumFreshRemaining(_ windows: [QuotaWindow], id: String? = nil,
+                                             now: Date, maxAge: TimeInterval) -> Double? {
+        windows.filter { (id == nil || $0.id == id) && $0.fresh(now: now, maxAge: maxAge) }
+            .compactMap(\.remaining).min()
     }
 }
 

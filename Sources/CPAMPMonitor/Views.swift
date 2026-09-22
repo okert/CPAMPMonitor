@@ -200,6 +200,21 @@ struct SettingsView: View {
         return preferred + model.accounts.filter { !known.contains($0.id) }
     }
 
+    private var displayWindowChoices: [DisplayWindowChoice] {
+        let rows = orderedRows.filter { row in
+            draft.displayAccountID == nil || row.id == draft.displayAccountID
+        }
+        var seen = Set<String>()
+        return rows.flatMap { row in
+            row.windows.compactMap { window -> DisplayWindowChoice? in
+                guard seen.insert(window.id).inserted else { return nil }
+                let title = draft.displayAccountID == nil
+                    ? "\(row.account.providerName) · \(window.title)" : window.title
+                return DisplayWindowChoice(id: window.id, title: title)
+            }
+        }
+    }
+
     private func moveAccount(_ id: String, offset: Int) {
         var ids = orderedRows.map(\.id)
         guard let index = ids.firstIndex(of: id) else { return }
@@ -241,12 +256,24 @@ struct SettingsView: View {
                     Picker("菜单栏显示", selection: Binding(get: { draft.displayAccountID ?? "" }, set: {
                         draft.displayAccountID = $0.isEmpty ? nil : $0
                     })) {
-                        Text("所有账号最低").tag("")
+                        Text("所有账号").tag("")
                         if let selected = draft.displayAccountID, !orderedRows.contains(where: { $0.id == selected }) {
                             Text("指定账号（当前不可用）").tag(selected)
                         }
                         ForEach(orderedRows) { row in
                             Text(row.account.title).tag(row.id)
+                        }
+                    }
+                    Picker("额度窗口", selection: Binding(get: { draft.displayWindowID ?? "" }, set: {
+                        draft.displayWindowID = $0.isEmpty ? nil : $0
+                    })) {
+                        Text("所有额度最低").tag("")
+                        if let selected = draft.displayWindowID,
+                           !displayWindowChoices.contains(where: { $0.id == selected }) {
+                            Text("指定额度（当前不可用）").tag(selected)
+                        }
+                        ForEach(displayWindowChoices) { choice in
+                            Text(choice.title).tag(choice.id)
                         }
                     }
                     Stepper("提醒：剩余 ≤ \(draft.warning)%", value: $draft.warning, in: 2...99)

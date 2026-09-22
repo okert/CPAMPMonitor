@@ -10,10 +10,10 @@ Windows preview downloads are published separately under `windows-v*` in [Releas
 
 ## Features
 
-- Shows either the lowest fresh percentage across all monitored accounts or the lowest fresh percentage for a selected account in the menu bar.
+- Shows either the lowest fresh percentage across all monitored accounts or a selected account's value in the menu bar, with an optional quota-window filter such as 5 hours or weekly.
 - Supports Codex, Antigravity and xAI, with Claude OAuth quota parsing support.
 - Displays quota windows, reset times and CPAMP usage history.
-- Configures the menu-bar display account, account selection and order, refresh interval and warning thresholds.
+- Configures the menu-bar display account and quota window, account selection and order, refresh interval and warning thresholds.
 - Sends macOS notifications with persistent per-account and per-cycle deduplication.
 - Stores the management key in macOS Keychain instead of source files or command-line arguments.
 - Supports direct HTTPS and an optional tunnel built from the user's existing SSH configuration.

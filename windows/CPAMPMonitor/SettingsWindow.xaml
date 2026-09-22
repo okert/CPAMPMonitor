@@ -32,6 +32,8 @@
     <CheckBox x:Name="Notifications" Content="Quota notifications" />
     <Label Content="Tray display" Target="{Binding ElementName=DisplayAccount}" Padding="0" />
     <ComboBox x:Name="DisplayAccount" DisplayMemberPath="Title" SelectedValuePath="Id" SelectionChanged="DisplayAccount_SelectionChanged" Margin="0,4,0,12" />
+    <Label Content="Quota window" Target="{Binding ElementName=DisplayWindow}" Padding="0" />
+    <ComboBox x:Name="DisplayWindow" DisplayMemberPath="Title" SelectedValuePath="Id" SelectionChanged="DisplayWindow_SelectionChanged" Margin="0,4,0,12" />
     <Button Content="Test notification" HorizontalAlignment="Left" Click="Test_Click" />
     <TextBlock Text="Accounts" FontSize="18" FontWeight="SemiBold" Margin="0,20,0,10" />
     <DockPanel>

@@ -20,12 +20,19 @@ public sealed class DisplayChoice
     public required string Id { get; init; }
     public required string Title { get; init; }
 }
+public sealed class DisplayWindowChoice
+{
+    public required string Id { get; init; }
+    public required string Title { get; init; }
+}
 public partial class SettingsWindow : Window
 {
     private readonly MonitorModel model;
     private readonly ObservableCollection<AccountChoice> choices = [];
     private readonly ObservableCollection<DisplayChoice> displayChoices = [];
+    private readonly ObservableCollection<DisplayWindowChoice> displayWindowChoices = [];
     private string displayAccountId = "";
+    private string displayWindowId = "";
     private bool syncingDisplay;
     internal SettingsWindow(MonitorModel model)
     {
@@ -33,12 +40,14 @@ public partial class SettingsWindow : Window
         this.model = model;
         var c = model.Config;
         displayAccountId = c.DisplayAccountId ?? "";
+        displayWindowId = c.DisplayWindowId ?? "";
         ConnectionName.Text = c.Name; ServiceUrl.Text = c.BaseUrl;
         Interval.Text = (c.Interval / 60).ToString(); Warning.Text = c.Warning.ToString(); Critical.Text = c.Critical.ToString();
         Notifications.IsChecked = c.Notifications;
         try { Startup.IsChecked = Storage.StartupEnabled(); } catch { Message.Text = "Startup preference could not be read."; }
         Accounts.ItemsSource = choices;
         DisplayAccount.ItemsSource = displayChoices;
+        DisplayWindow.ItemsSource = displayWindowChoices;
         SyncAccounts();
         model.Changed += SyncAccounts;
         Closed += (_, _) => model.Changed -= SyncAccounts;
@@ -60,12 +69,37 @@ public partial class SettingsWindow : Window
             if (!string.IsNullOrEmpty(displayAccountId) && !displayChoices.Any(c => c.Id == displayAccountId))
                 displayChoices.Add(new() { Id = displayAccountId, Title = "Selected account (currently unavailable)" });
             DisplayAccount.SelectedValue = displayAccountId;
+
+            displayWindowChoices.Clear();
+            displayWindowChoices.Add(new() { Id = "", Title = "All quota windows (minimum)" });
+            var rows = string.IsNullOrEmpty(displayAccountId)
+                ? model.Accounts
+                : model.Accounts.Where(row => row.Account.Id == displayAccountId);
+            var seenWindows = new HashSet<string>();
+            foreach (var row in rows)
+                foreach (var window in row.Windows)
+                    if (seenWindows.Add(window.Id))
+                        displayWindowChoices.Add(new() {
+                            Id = window.Id,
+                            Title = string.IsNullOrEmpty(displayAccountId)
+                                ? $"{row.Account.ProviderName} / {window.Title}" : window.Title });
+            if (!string.IsNullOrEmpty(displayWindowId) && !displayWindowChoices.Any(c => c.Id == displayWindowId))
+                displayWindowChoices.Add(new() { Id = displayWindowId, Title = "Selected quota (currently unavailable)" });
+            DisplayWindow.SelectedValue = displayWindowId;
         }
         finally { syncingDisplay = false; }
     }
     private void DisplayAccount_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!syncingDisplay && DisplayAccount.SelectedValue is string id) displayAccountId = id;
+        if (!syncingDisplay && DisplayAccount.SelectedValue is string id)
+        {
+            displayAccountId = id;
+            SyncAccounts();
+        }
+    }
+    private void DisplayWindow_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!syncingDisplay && DisplayWindow.SelectedValue is string id) displayWindowId = id;
     }
     private void Save_Click(object sender, RoutedEventArgs e)
     {
@@ -80,7 +114,8 @@ public partial class SettingsWindow : Window
                 Interval = checked(minutes * 60), Warning = warning, Critical = critical,
                 Notifications = Notifications.IsChecked == true, Excluded = excluded,
                 AccountOrder = choices.Select(c => c.Id).ToList(),
-                DisplayAccountId = string.IsNullOrEmpty(displayAccountId) ? null : displayAccountId };
+                DisplayAccountId = string.IsNullOrEmpty(displayAccountId) ? null : displayAccountId,
+                DisplayWindowId = string.IsNullOrEmpty(displayWindowId) ? null : displayWindowId };
             model.Save(config, Secret.Password, Startup.IsChecked == true);
             Secret.Clear(); Close();
         }

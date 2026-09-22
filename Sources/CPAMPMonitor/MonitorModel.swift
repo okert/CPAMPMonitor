@@ -16,6 +16,11 @@ struct AccountState: Identifiable {
     var fetched: Date?
 }
 
+struct DisplayWindowChoice: Identifiable, Hashable {
+    let id: String
+    let title: String
+}
+
 @MainActor final class MonitorModel: ObservableObject {
     @Published var config = Storage.load(Configuration.self, key: "configuration") ?? Configuration()
     @Published var accounts: [AccountState] = []
@@ -42,17 +47,37 @@ struct AccountState: Identifiable {
         return accounts.filter { $0.enabled && $0.error == nil }.flatMap(\.windows).filter { $0.fresh(now: now, maxAge: maxAge) }
     }
     var lowest: Double? { QuotaWindow.minimumFreshRemaining(freshWindows, now: now, maxAge: maxAge) }
+    var displayWindowChoices: [DisplayWindowChoice] {
+        let rows = accounts.filter { row in
+            config.displayAccountID == nil || row.id == config.displayAccountID
+        }
+        var seen = Set<String>()
+        return rows.flatMap { row in
+            row.windows.compactMap { window -> DisplayWindowChoice? in
+                guard seen.insert(window.id).inserted else { return nil }
+                let title = config.displayAccountID == nil
+                    ? "\(row.account.providerName) · \(window.title)" : window.title
+                return DisplayWindowChoice(id: window.id, title: title)
+            }
+        }
+    }
     var displayLowest: Double? {
         guard !paused, error == nil else { return nil }
         let rows = accounts.filter { row in
             row.enabled && row.error == nil && (config.displayAccountID == nil || row.id == config.displayAccountID)
         }
-        return QuotaWindow.minimumFreshRemaining(rows.flatMap(\.windows), now: now, maxAge: maxAge)
+        return QuotaWindow.minimumFreshRemaining(rows.flatMap(\.windows), id: config.displayWindowID,
+                                                 now: now, maxAge: maxAge)
     }
-    var displayLabel: String {
-        guard let id = config.displayAccountID else { return "所有账号最低" }
+    var displayAccountLabel: String {
+        guard let id = config.displayAccountID else { return "所有账号" }
         return accounts.first(where: { $0.id == id })?.account.title ?? "指定账号"
     }
+    var displayWindowLabel: String {
+        guard config.displayWindowID != nil else { return "所有额度" }
+        return displayWindowChoices.first(where: { $0.id == config.displayWindowID })?.title ?? "指定额度"
+    }
+    var displayLabel: String { "\(displayAccountLabel) · \(displayWindowLabel)" }
     var hasProblems: Bool {
         error != nil || accounts.contains { $0.enabled && ($0.error != nil || $0.windows.isEmpty || $0.windows.contains { !$0.fresh(now: now, maxAge: maxAge) }) }
     }

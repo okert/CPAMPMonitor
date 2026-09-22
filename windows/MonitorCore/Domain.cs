@@ -20,6 +20,8 @@ public sealed record Configuration
     public List<string> AccountOrder { get; init; } = [];
     /// Null keeps the legacy behavior: show the lowest fresh quota across all monitored accounts.
     public string? DisplayAccountId { get; init; }
+    /// Null keeps the legacy behavior: consider every quota window.
+    public string? DisplayWindowId { get; init; }
     public double MaxAge => Interval * 2 + 60;
 
     public static Uri NormalizeUrl(string input)
@@ -43,7 +45,8 @@ public sealed record Configuration
         if (Interval is < 60 or > 3600 || Critical < 1 || Warning > 99 || Critical >= Warning)
             throw new MonitorException("Refresh: 1-60 minutes. Thresholds: 1 <= critical < warning <= 99.");
         return this with { BaseUrl = NormalizeUrl(BaseUrl).AbsoluteUri, Name = Name.Trim(),
-            DisplayAccountId = string.IsNullOrWhiteSpace(DisplayAccountId) ? null : DisplayAccountId };
+            DisplayAccountId = string.IsNullOrWhiteSpace(DisplayAccountId) ? null : DisplayAccountId,
+            DisplayWindowId = string.IsNullOrWhiteSpace(DisplayWindowId) ? null : DisplayWindowId };
     }
 }
 
@@ -102,8 +105,9 @@ public sealed record QuotaWindow(string Id, string Title, double? Remaining, Dat
 {
     public bool Fresh(DateTimeOffset now, double maxAge) => (now - Observed).TotalSeconds >= -60 &&
         (now - Observed).TotalSeconds <= maxAge && (Reset is null || Reset > now);
-    public static double? MinimumFreshRemaining(IEnumerable<QuotaWindow> windows, DateTimeOffset now, double maxAge) =>
-        windows.Where(w => w.Fresh(now, maxAge)).Select(w => w.Remaining).Where(n => n.HasValue)
+    public static double? MinimumFreshRemaining(IEnumerable<QuotaWindow> windows, DateTimeOffset now, double maxAge,
+        string? id = null) => windows.Where(w => (id is null || w.Id == id) && w.Fresh(now, maxAge))
+            .Select(w => w.Remaining).Where(n => n.HasValue)
             .Select(n => n!.Value).Cast<double?>().Min();
 }
 public sealed record QuotaResult(List<QuotaWindow> Windows, string Plan = "");

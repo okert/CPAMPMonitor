@@ -37,15 +37,27 @@ internal sealed class MonitorModel : IDisposable
     private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(15) };
     private CancellationTokenSource? request;
     private int generation;
-    public double? Lowest => LowestFor(null);
-    public double? DisplayLowest => LowestFor(Config.DisplayAccountId);
-    public string DisplayLabel => Config.DisplayAccountId is null ? "All accounts minimum" :
+    public double? Lowest => LowestFor(null, null);
+    public double? DisplayLowest => LowestFor(Config.DisplayAccountId, Config.DisplayWindowId);
+    public string DisplayLabel => $"{DisplayAccountLabel} | {DisplayWindowLabel}";
+    private string DisplayAccountLabel => Config.DisplayAccountId is null ? "All accounts" :
         Accounts.FirstOrDefault(a => a.Account.Id == Config.DisplayAccountId)?.Account.Title ?? "Selected account";
-    private double? LowestFor(string? accountId)
+    private string DisplayWindowLabel
+    {
+        get
+        {
+            if (Config.DisplayWindowId is null) return "All quotas";
+            var rows = Config.DisplayAccountId is null ? Accounts :
+                Accounts.Where(a => a.Account.Id == Config.DisplayAccountId);
+            return rows.SelectMany(a => a.Windows).FirstOrDefault(w => w.Id == Config.DisplayWindowId)?.Title
+                ?? "Selected quota";
+        }
+    }
+    private double? LowestFor(string? accountId, string? windowId)
     {
         if (Paused || Error is not null) return null;
         var rows = Accounts.Where(a => a.Enabled && a.Error is null && (accountId is null || a.Account.Id == accountId));
-        return QuotaWindow.MinimumFreshRemaining(rows.SelectMany(a => a.Windows), DateTimeOffset.UtcNow, Config.MaxAge);
+        return QuotaWindow.MinimumFreshRemaining(rows.SelectMany(a => a.Windows), DateTimeOffset.UtcNow, Config.MaxAge, windowId);
     }
     public string Status => Paused ? "Paused" : Refreshing ? "Refreshing" : Config.BaseUrl.Length == 0 ? "Not connected" :
         Error is not null ? "Connection failed" : !Accounts.Any(a => a.Enabled) ? "No monitored accounts" :

@@ -9,7 +9,7 @@ Native C# / WPF desktop client. No WebView, Electron or SSH. Supports x64 and AR
 1. Download `win-x64` for Intel/AMD PCs, or `win-arm64` for Windows on ARM.
 2. Extract the entire ZIP into a permanent, user-writable folder.
 3. Run `CPAMPMonitor.exe`. The .NET runtime is bundled; no separate runtime installation is required.
-4. Enter the CPAMP management HTTPS URL and management key in Settings. Blank key retains the credential already stored for that exact normalized address. The tray display can show the minimum fresh quota across all monitored accounts or the minimum fresh quota for one selected account.
+4. Enter the CPAMP management HTTPS URL and management key in Settings. Blank key retains the credential already stored for that exact normalized address. The tray display can choose an account and quota window, such as 5 hours or weekly; leaving either selector at its default keeps the corresponding minimum behavior.
 
 Windows 11 is recommended. Windows 10 22H2 is also a target but has not been tested on a real machine. Downloads are unsigned and may be flagged by SmartScreen; verify the source and SHA-256 before approving execution. Do not disable system security globally.
 

@@ -45,8 +45,13 @@ Check(QuotaWindow.MinimumFreshRemaining(new[] { window, window with { Id = "lowe
 Check(QuotaWindow.MinimumFreshRemaining(new[] { window with { Remaining = null } }, now, 600) is null,
     "Unavailable selected account is not zero");
 var displayConfig = new Configuration { DisplayAccountId = "codex:demo:1" };
+displayConfig = displayConfig with { DisplayWindowId = "main:primary_window" };
 var displayRoundTrip = System.Text.Json.JsonSerializer.Deserialize<Configuration>(System.Text.Json.JsonSerializer.Serialize(displayConfig))!;
-Check(displayRoundTrip.DisplayAccountId == displayConfig.DisplayAccountId, "Tray display setting round trip");
+Check(displayRoundTrip.DisplayAccountId == displayConfig.DisplayAccountId && displayRoundTrip.DisplayWindowId == displayConfig.DisplayWindowId,
+    "Tray account and quota display settings round trip");
+Check(QuotaWindow.MinimumFreshRemaining(new[] { window with { Id = "daily", Remaining = 70 },
+    window with { Id = "weekly", Remaining = 40 } }, now, 600, "weekly") == 40,
+    "Selected quota window minimum");
 var ledger = new AlertLedger();
 Check(ledger.Evaluate("a", window, 20, 10, now, 600) == 10, "Critical alert priority");
 Check(ledger.Evaluate("a", window with { Remaining = 15 }, 20, 10, now, 600) is null, "Critical suppresses weaker alert");
