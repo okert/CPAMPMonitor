@@ -35,9 +35,27 @@ import MonitorCore
         else if model.hasProblems { name = "exclamationmark.triangle" }
         let image = NSImage(systemSymbolName: name, accessibilityDescription: "CPAMP Monitor")
         image?.isTemplate = true
-        item.button?.image = image
+        let appearance = model.menuBarAppearance
+        let value = model.displayLowest.map { "\(Int($0))" + (appearance.showPercent ? "%" : "") }
+        let text = value ?? (appearance.showIcon ? "" : "--")
+        if appearance.border != .none {
+            let badge = appearance.badge(value ?? "--")
+            if appearance.showIcon, let image {
+                let combined = NSImage(size: NSSize(width: 40, height: 20), flipped: false) { _ in
+                    image.draw(in: NSRect(x: 0, y: 2, width: 16, height: 16))
+                    badge.draw(in: NSRect(x: 20, y: 0, width: 20, height: 20))
+                    return true
+                }
+                combined.isTemplate = true
+                item.button?.image = combined
+            } else { item.button?.image = badge }
+            item.button?.title = ""
+        } else {
+            item.button?.image = appearance.showIcon ? image : nil
+            item.button?.title = (appearance.showIcon && !text.isEmpty ? " " : "") + text
+        }
         item.button?.contentTintColor = nil
-        item.button?.title = model.displayLowest.map { " \(Int($0))%" } ?? ""
+        item.button?.setAccessibilityLabel("CPAMP Monitor · \(model.displayLabel) · \(value ?? "无数据") · \(model.statusText)")
         item.button?.font = .monospacedDigitSystemFont(ofSize: 12, weight: .medium)
         item.button?.toolTip = "CPAMP Monitor · \(model.displayLabel) · \(model.statusText)"
     }

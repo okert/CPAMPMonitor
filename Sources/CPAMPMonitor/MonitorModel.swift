@@ -24,6 +24,12 @@ struct DisplayWindowChoice: Identifiable, Hashable {
 }
 
 @MainActor final class MonitorModel: ObservableObject {
+    @Published var menuBarAppearance = Storage.load(MenuBarAppearance.self, key: "menuBarAppearance") ?? MenuBarAppearance() {
+        didSet {
+            Storage.save(menuBarAppearance, key: "menuBarAppearance")
+            onChange?()
+        }
+    }
     @Published var config = Storage.load(Configuration.self, key: "configuration") ?? Configuration()
     @Published var accounts: [AccountState] = []
     @Published var refreshing = false

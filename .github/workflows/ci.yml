@@ -18,6 +18,11 @@ jobs:
       - name: Run core checks
         run: swift run MonitorChecks
 
+      - name: Check menu bar appearance
+        run: |
+          swiftc Sources/CPAMPMonitor/MenuBarAppearance.swift scripts/check-menu-bar.swift -o /tmp/check-menu-bar
+          /tmp/check-menu-bar
+
       - name: Verify release compilation
         run: swift build -c release --product CPAMPMonitor
 

@@ -312,6 +312,15 @@ struct SettingsView: View {
                     SecureField("管理密钥", text: $secret, prompt: Text("留空保留此地址已存密钥"))
                     LabeledContent("密钥存储", value: "macOS 钥匙串")
                 }
+                Section("菜单栏外观") {
+                    Toggle("显示前置图标", isOn: $model.menuBarAppearance.showIcon)
+                    Toggle("显示百分号", isOn: $model.menuBarAppearance.showPercent)
+                    Picker("数字边框", selection: $model.menuBarAppearance.border) {
+                        ForEach(MenuBarAppearance.Border.allCases, id: \.self) { border in
+                            Text(border.title).tag(border)
+                        }
+                    }.pickerStyle(.segmented)
+                }
                 Section("监控") {
                     Picker("刷新间隔", selection: $draft.interval) {
                         ForEach([60, 120, 300, 600, 900, 1800, 3600], id: \.self) { value in
